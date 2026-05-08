@@ -1,0 +1,47 @@
+name: Terraform Apply
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: us-east-1
+
+      - name: Write OCI private key
+        run: |
+          mkdir -p ~/.oci
+          echo "${{ secrets.OCI_PRIVATE_KEY }}" > ~/.oci/oci_api_key.pem
+          chmod 600 ~/.oci/oci_api_key.pem
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Apply
+        run: terraform apply -auto-approve
+        env:
+          TF_VAR_cloudflare_api_token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          TF_VAR_cloudflare_zone_id: ${{ secrets.CLOUDFLARE_ZONE_ID }}
+          TF_VAR_cloudflare_account_id: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          TF_VAR_tunnel_id: ${{ secrets.TUNNEL_ID }}
+          TF_VAR_oci_tenancy_ocid: ${{ secrets.OCI_TENANCY_OCID }}
+          TF_VAR_oci_user_ocid: ${{ secrets.OCI_USER_OCID }}
+          TF_VAR_oci_fingerprint: ${{ secrets.OCI_FINGERPRINT }}
+          TF_VAR_oci_private_key_path: ~/.oci/oci_api_key.pem
+          TF_VAR_oci_region: ${{ secrets.OCI_REGION }}
+          TF_VAR_oci_compartment_id: ${{ secrets.OCI_COMPARTMENT_ID }}
+          TF_VAR_oci_ssh_public_key: ${{ secrets.OCI_SSH_PUBLIC_KEY }}
