@@ -96,6 +96,15 @@ resource "cloudflare_record" "tunnel_prometheus" {
   comment = "Prometheus — homelab tunnel"
 }
 
+resource "cloudflare_record" "adguard_dns" {
+  zone_id = var.cloudflare_zone_id
+  name = "dns"
+  content = "158.101.32.128"
+  type = "A"
+  proxied = false
+  ttl = 1
+}
+
 # ── Email security TXT records ──────────────────────────────────────
 
 resource "cloudflare_record" "dmarc" {
